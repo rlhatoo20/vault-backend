@@ -1,13 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
-const { YoutubeTranscript } = require("youtube-transcript");
 const { OpenAI } = require("openai");
 
 // 🔑 Load your API key from environment variable or config
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// === Fallback using yt-dlp ===
+// === Fetch transcript with yt-dlp ===
 async function fetchTranscriptWithYTDLP(videoId) {
   const tempDir = "./transcripts";
   if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
@@ -35,22 +34,9 @@ async function fetchTranscriptWithYTDLP(videoId) {
   }
 }
 
-// === Main fetch with fallback ===
+// === Fetch transcript wrapper (yt-dlp only) ===
 async function fetchYouTubeTranscript(videoId) {
-  try {
-    let segments = await YoutubeTranscript.fetchTranscript(videoId, { lang: "en" });
-
-    if (!segments || segments.length === 0) {
-      console.warn("⚠️ No segments returned. Trying yt-dlp...");
-      return await fetchTranscriptWithYTDLP(videoId);
-    }
-
-    console.log("📊 Segments fetched:", segments.length);
-    return segments.map(s => s.text).join(" ");
-  } catch (err) {
-    console.warn("❌ API-based fetch failed, using yt-dlp...");
-    return await fetchTranscriptWithYTDLP(videoId);
-  }
+  return await fetchTranscriptWithYTDLP(videoId);
 }
 
 // === Summarize with OpenAI ===
@@ -127,7 +113,6 @@ async function summarizeTranscript(transcript, chunkSize = 1000) {
   };
 }
 
-
 function splitIntoChunks(text, wordsPerChunk = 1000) {
   const words = text.split(/\s+/);
   const chunks = [];
@@ -136,6 +121,7 @@ function splitIntoChunks(text, wordsPerChunk = 1000) {
   }
   return chunks;
 }
+
 module.exports = {
   fetchYouTubeTranscript,
   summarizeTranscript
