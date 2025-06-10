@@ -12,9 +12,8 @@ async function fetchTranscriptWithYTDLP(videoId) {
   if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
 
   try {
-    const cmd = `yt-dlp --write-auto-sub --sub-lang en --skip-download --output "${tempDir}/%(id)s.%(ext)s" https://www.youtube.com/watch?v=${videoId}`;
+    const cmd = `./bin/yt-dlp --write-auto-sub --sub-lang en --skip-download --output "${tempDir}/%(id)s.%(ext)s" https://www.youtube.com/watch?v=${videoId}`;
     execSync(cmd, { stdio: "ignore" });
-
     const vttFile = fs.readdirSync(tempDir).find(f => f.startsWith(videoId) && f.endsWith(".en.vtt"));
     if (!vttFile) throw new Error("No .vtt file found");
 
